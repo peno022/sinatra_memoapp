@@ -61,6 +61,10 @@ class Memo
   end
 end
 
+helpers do
+  include Rack::Utils
+end
+
 get '/' do
   redirect '/memos'
   erb :index
@@ -86,7 +90,7 @@ get '/:id' do
 end
 
 post '/memos' do
-  memo = Memo.new(Memo.all.length + 1, params['title'], params['content'])
+  memo = Memo.new(Memo.all.length + 1, escape_html(params['title']), escape_html(params['content']))
   Memo.add(memo)
   redirect '/memos'
   erb :index
@@ -94,8 +98,8 @@ end
 
 post '/memos/edit/:id' do
   edited_memo = Memo.all.find { |memo| memo.id == params['id'].to_i }
-  edited_memo.title = params['title']
-  edited_memo.content = params['content']
+  edited_memo.title = escape_html(params['title'])
+  edited_memo.content = escape_html(params['content'])
   # ファイル書き込み
   Memo.edit(edited_memo)
   redirect '/memos'
