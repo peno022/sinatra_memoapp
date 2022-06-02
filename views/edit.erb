@@ -1,0 +1,15 @@
+<form method="post" action="/memos/edit/<%= @memo.id %>">
+  <div>
+    <label>
+      タイトル
+      <input type="text" name="title" value="<%= @memo.title %>" required>
+    </label>
+  </div>
+  <div>
+    <label>
+      内容
+      <textarea name="content" required><%= @memo.content %></textarea>
+    </label>
+  </div>
+  <button type="submit">送信</button>
+</form>

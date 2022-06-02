@@ -1,0 +1,10 @@
+<h2><%= @memo.title %></h2>
+<div>
+  <%= @memo.content %>
+</div>
+<div>
+  <a class="button" href="/memos/edit/<%= @memo.id %>" method="post">変更</a>
+  <form action="/memos/delete/<%= @memo.id %>" method="post">
+    <button name="delete" value="delete">削除</button>
+  </form>
+</div>
