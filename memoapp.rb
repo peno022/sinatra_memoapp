@@ -25,33 +25,32 @@ class Memo
     memos
   end
 
-  def self.add(new_memo)
-    write(hash_memos(all.push(new_memo)))
+  def self.find_by_id(id)
+    all.find { |memo| memo.id == id }
   end
 
-  def self.delete(delete_memo_id)
-    memos = all.delete_if { |memo| memo.id == delete_memo_id.to_i }
-    write(hash_memos(memos))
+  def add
+    Memo.write(Memo.all.push(self).map(&:hash))
   end
 
-  def self.edit(edited_memo)
-    edited_memos = all.each do |memo|
-      if memo.id == edited_memo.id
-        memo.title = edited_memo.title
-        memo.content = edited_memo.content
-      end
+  def delete
+    memos = Memo.all.delete_if { |memo| memo.id == id.to_i }
+    Memo.write(memos.map(&:hash))
+  end
+
+  def edit
+    edited_memos = Memo.all.map do |memo|
+      memo.id == id ? self : memo
     end
-    write(hash_memos(edited_memos))
+    Memo.write(edited_memos.map(&:hash))
   end
 
-  def self.hash_memos(memos)
-    memos.map do |memo|
-      {
-        "id": memo.id,
-        "title": memo.title,
-        "content": memo.content
-      }
-    end
+  def hash
+    {
+      "id": id,
+      "title": title,
+      "content": content
+    }
   end
 
   def self.write(hash_memos)
@@ -80,34 +79,35 @@ get '/new' do
 end
 
 get '/memos/edit/:id' do
-  @memo = Memo.all.find { |memo| memo.id == params['id'].to_i }
+  @memo = Memo.find_by_id(params['id'].to_i)
   erb :edit
 end
 
 get '/:id' do
-  @memo = Memo.all.find { |memo| memo.id == params['id'].to_i }
+  @memo = Memo.find_by_id(params['id'].to_i)
   erb :detail
 end
 
 post '/memos' do
-  memo = Memo.new(Memo.all.length + 1, escape_html(params['title']), escape_html(params['content']))
-  Memo.add(memo)
+  new_id = Memo.all.empty? ? 0 : Memo.all.map(&:id).max + 1
+  memo = Memo.new(new_id, escape_html(params['title']), escape_html(params['content']))
+  memo.add
   redirect '/memos'
   erb :index
 end
 
 post '/memos/edit/:id' do
-  edited_memo = Memo.all.find { |memo| memo.id == params['id'].to_i }
+  edited_memo = Memo.find_by_id(params['id'].to_i)
   edited_memo.title = escape_html(params['title'])
   edited_memo.content = escape_html(params['content'])
-  # ファイル書き込み
-  Memo.edit(edited_memo)
+  edited_memo.edit
   redirect '/memos'
   erb :index
 end
 
 post '/memos/delete/:id' do
-  Memo.delete(params['id'])
+  deleted_memo = Memo.find_by_id(params['id'].to_i)
+  deleted_memo.delete
   redirect '/memos'
   erb :index
 end
