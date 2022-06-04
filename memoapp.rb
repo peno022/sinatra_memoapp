@@ -2,8 +2,10 @@
 
 require 'sinatra'
 require 'sinatra/reloader'
+require 'sinatra/flash'
 require 'json'
 
+enable :sessions
 class Memo
   attr_accessor :id, :title, :content
 
@@ -89,25 +91,40 @@ get '/:id' do
 end
 
 post '/memos' do
-  new_id = Memo.all.empty? ? 0 : Memo.all.map(&:id).max + 1
-  memo = Memo.new(new_id, escape_html(params['title']), escape_html(params['content']))
-  memo.add
-  redirect '/memos'
-  erb :index
+  if params['title'].strip.empty? || params['content'].strip.empty?
+    flash[:alert] = 'タイトル、内容にはテキストを入力してください。'
+    redirect '/new'
+  else
+    new_id = Memo.all.empty? ? 0 : Memo.all.map(&:id).max + 1
+    memo = Memo.new(new_id, escape_html(params['title']), escape_html(params['content']))
+    memo.add
+    redirect '/memos'
+    erb :index
+  end
 end
 
 post '/memos/edit/:id' do
   edited_memo = Memo.find_by_id(params['id'].to_i)
-  edited_memo.title = escape_html(params['title'])
-  edited_memo.content = escape_html(params['content'])
-  edited_memo.edit
-  redirect '/memos'
-  erb :index
+  if edited_memo
+    edited_memo.title = escape_html(params['title'])
+    edited_memo.content = escape_html(params['content'])
+    edited_memo.edit
+    redirect '/memos'
+    erb :index
+  else
+    flash[:error] = '既に削除されたメモです。'
+    redirect '/memos'
+  end
 end
 
 post '/memos/delete/:id' do
   deleted_memo = Memo.find_by_id(params['id'].to_i)
-  deleted_memo.delete
-  redirect '/memos'
-  erb :index
+  if deleted_memo
+    deleted_memo.delete
+    redirect '/memos'
+    erb :index
+  else
+    flash[:error] = '既に削除されたメモです。'
+    redirect '/memos'
+  end
 end

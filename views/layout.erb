@@ -7,6 +7,12 @@
 </head>
 <body>
   <h1><a href="/memos">メモアプリ</a></h1>
+  <% flash.keys.each do |type| %>
+    <div data-alert class="flash <%= type %> alert-box radius">
+      <%= flash[type] %>
+      <a href="/memos" class="close">&times;</a>
+    </div>
+  <% end %>
   <%= yield %>
 </body>
 </html>
