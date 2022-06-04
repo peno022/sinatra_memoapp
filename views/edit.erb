@@ -1,4 +1,4 @@
-<form method="post" action="/memos/edit/<%= @memo.id %>">
+<form method="post" action="/memos/<%= @memo.id %>">
   <div>
     <label>
       タイトル
@@ -11,5 +11,6 @@
       <textarea name="content" required><%= @memo.content %></textarea>
     </label>
   </div>
-  <button class="button" type="submit" name="edit" value="edit">送信</button>
+  <input id="hidden" type="hidden" name="_method" value="patch">
+  <button class="button" type="submit">送信</button>
 </form>

@@ -103,7 +103,7 @@ post '/memos' do
   end
 end
 
-post '/memos/edit/:id' do
+patch '/memos/:id' do
   edited_memo = Memo.find_by_id(params['id'].to_i)
   if edited_memo
     edited_memo.title = escape_html(params['title'])
@@ -117,7 +117,7 @@ post '/memos/edit/:id' do
   end
 end
 
-post '/memos/delete/:id' do
+delete '/memos/:id' do
   deleted_memo = Memo.find_by_id(params['id'].to_i)
   if deleted_memo
     deleted_memo.delete

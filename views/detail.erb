@@ -4,7 +4,8 @@
 </div>
 <div class="container">
   <a class="button" href="/memos/edit/<%= @memo.id %>" method="post">変更</a>
-  <form action="/memos/delete/<%= @memo.id %>" method="post">
-    <button class="button" name="delete" value="delete">削除</button>
+  <form action="/memos/<%= @memo.id %>" method="post">
+    <input id="hidden" type="hidden" name="_method" value="delete">
+    <button class="button">削除</button>
   </form>
 </div>
