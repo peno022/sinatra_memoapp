@@ -95,7 +95,7 @@ post '/memos' do
   end
 
   new_id = Memo.all.empty? ? 0 : Memo.all.map(&:id).max + 1
-  memo = Memo.new(new_id, escape_html(params['title']), escape_html(params['content']))
+  memo = Memo.new(new_id, params['title'], params['content'])
   memo.create
   redirect '/memos'
   erb :index
@@ -115,8 +115,8 @@ patch '/memos/:id' do
     return
   end
 
-  target_memo.title = escape_html(params['title'])
-  target_memo.content = escape_html(params['content'])
+  target_memo.title = params['title']
+  target_memo.content = params['content']
   target_memo.save
   redirect '/memos'
   erb :index

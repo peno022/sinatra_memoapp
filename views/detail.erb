@@ -1,6 +1,6 @@
-<h2><%= @memo.title %></h2>
+<h2><%= escape_html(@memo.title) %></h2>
 <div>
-  <%= @memo.content %>
+  <%= escape_html(@memo.content) %>
 </div>
 <div class="container">
   <a class="button" href="/memos/edit/<%= @memo.id %>" method="post">変更</a>
