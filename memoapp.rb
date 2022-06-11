@@ -7,7 +7,7 @@ require 'json'
 
 enable :sessions
 
-ERROR_MESSAGE_DELETED_MEMO = '既に削除されたメモです。'
+ERROR_MESSAGE_MEMO_NOT_EXIST = '対象のメモデータがありません。'
 ERROR_MESSAGE_EMPTY_MEMO = 'タイトル、内容にはテキストを入力してください。'
 class Memo
   attr_accessor :id, :title, :content
@@ -104,7 +104,7 @@ end
 patch '/memos/:id' do
   target_memo = Memo.find_by_id(params['id'].to_i)
   unless target_memo
-    show_error_message(ERROR_MESSAGE_DELETED_MEMO)
+    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
     redirect '/memos'
     return
   end
@@ -125,7 +125,7 @@ end
 delete '/memos/:id' do
   target_memo = Memo.find_by_id(params['id'].to_i)
   unless target_memo
-    show_error_message(ERROR_MESSAGE_DELETED_MEMO)
+    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
     redirect '/memos'
     return
   end
