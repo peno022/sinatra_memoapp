@@ -1,0 +1,8 @@
+<a class="button" href="/memos/new">追加</a>
+<ul>
+  <% @memos.each do |memo| %>
+    <li data-id= "<%= memo.id %>">
+      <a href="/memos/<%= memo.id %>"><%= escape_html(memo.title) %></a>
+    </li>
+  <% end %>
+</ul>

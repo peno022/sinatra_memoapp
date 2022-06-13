@@ -1,0 +1,11 @@
+<h2><%= escape_html(@memo.title) %></h2>
+<div>
+  <%= escape_html(@memo.content) %>
+</div>
+<div class="container">
+  <a class="button" href="/memos/edit/<%= @memo.id %>" method="post">変更</a>
+  <form action="/memos/<%= @memo.id %>" method="post">
+    <input id="hidden" type="hidden" name="_method" value="delete">
+    <button class="button">削除</button>
+  </form>
+</div>
