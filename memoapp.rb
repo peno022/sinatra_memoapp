@@ -4,62 +4,64 @@ require 'sinatra'
 require 'sinatra/reloader'
 require 'sinatra/flash'
 require 'json'
+require 'pg'
 
 enable :sessions
 
 ERROR_MESSAGE_MEMO_NOT_EXIST = '対象のメモデータがありません。'
 ERROR_MESSAGE_EMPTY_MEMO = 'タイトル、内容にはテキストを入力してください。'
-class Memo
-  attr_accessor :id, :title, :content
 
-  def initialize(id, title, content)
+DB = {
+  db_name: 'sinatra_memoapp',
+  host: 'localhost',
+  user: 'postgres',
+  port: 5432
+}.freeze
+
+class Memo
+  attr_accessor :title, :content
+  attr_reader :id, :created_at, :updated_at
+
+  def initialize(id, title, content, created_at, updated_at)
     @id = id
     @title = title
     @content = content
+    @created_at = created_at
+    @updated_at = updated_at
   end
 
   def self.all
     memo_hash_objects = []
-    File.open('data.json') do |f|
-      memo_hash_objects = JSON.parse(f.read)['memos']
+    db_exec('SELECT * FROM memos').each do |row|
+      memo_hash_objects.push(row)
     end
     memo_hash_objects.map do |memo_hash_object|
-      Memo.new(memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'])
+      Memo.new(memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at'])
     end
   end
 
   def self.find_by_id(id)
-    all.find { |memo| memo.id == id }
+    memo_hash_objects = []
+    db_exec("SELECT * FROM memos WHERE id = '#{id}';").each do |row|
+      memo_hash_objects.push(row)
+    end
+    return unless memo_hash_objects.length == 1
+
+    Memo.new(memo_hash_objects[0]['id'], memo_hash_objects[0]['title'], memo_hash_objects[0]['content'], memo_hash_objects[0]['created_at'],
+             memo_hash_objects[0]['updated_at'])
   end
 
   def create
-    Memo.write(Memo.all.push(self).map(&:hash))
+    db_exec("INSERT INTO memos(title, content) VALUES ('#{title}', '#{content}');")
   end
 
   def delete
-    memos = Memo.all.delete_if { |memo| memo.id == @id.to_i }
-    Memo.write(memos.map(&:hash))
+    db_exec("DELETE FROM memos WHERE id = '#{id}';")
   end
 
-  def save
-    edited_memos = Memo.all.map do |memo|
-      memo.id == @id ? self : memo
-    end
-    Memo.write(edited_memos.map(&:hash))
-  end
-
-  def hash
-    {
-      "id": @id,
-      "title": @title,
-      "content": @content
-    }
-  end
-
-  def self.write(memo_hash_objects)
-    File.open('data.json', 'w') do |f|
-      JSON.dump({ 'memos' => memo_hash_objects }, f)
-    end
+  def update
+    db_exec("UPDATE memos SET title='#{title}', content='#{content}'
+                , updated_at=CURRENT_TIMESTAMP where id = '#{id}';")
   end
 end
 
@@ -78,12 +80,18 @@ get '/memos/new' do
 end
 
 get '/memos/edit/:id' do
-  @memo = Memo.find_by_id(params['id'].to_i)
+  target_memo = Memo.find_by_id(params['id'])
+  unless target_memo
+    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
+    redirect '/memos'
+    return
+  end
+  @memo = target_memo
   erb :edit
 end
 
 get '/memos/:id' do
-  @memo = Memo.find_by_id(params['id'].to_i)
+  @memo = Memo.find_by_id(params['id'])
   erb :detail
 end
 
@@ -94,15 +102,14 @@ post '/memos' do
     return
   end
 
-  new_id = Memo.all.empty? ? 0 : Memo.all.map(&:id).max + 1
-  memo = Memo.new(new_id, params['title'], params['content'])
+  memo = Memo.new(nil, params['title'], params['content'], nil, nil)
   memo.create
   redirect '/memos'
   erb :index
 end
 
 patch '/memos/:id' do
-  target_memo = Memo.find_by_id(params['id'].to_i)
+  target_memo = Memo.find_by_id(params['id'])
   unless target_memo
     show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
     redirect '/memos'
@@ -117,13 +124,13 @@ patch '/memos/:id' do
 
   target_memo.title = params['title']
   target_memo.content = params['content']
-  target_memo.save
+  target_memo.update
   redirect '/memos'
   erb :index
 end
 
 delete '/memos/:id' do
-  target_memo = Memo.find_by_id(params['id'].to_i)
+  target_memo = Memo.find_by_id(params['id'])
   unless target_memo
     show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
     redirect '/memos'
@@ -137,4 +144,8 @@ end
 
 def show_error_message(message)
   flash[:error] = message
+end
+
+def db_exec(sql)
+  PG.connect(host: DB[:host], port: DB[:port], dbname: DB[:db_name], user: DB[:user]).exec(sql)
 end
