@@ -30,13 +30,13 @@ class Memo
   end
 
   def self.all
-    db_exec('SELECT * FROM memos').to_a.map do |memo_hash_object|
+    db_exec_select_all.to_a.map do |memo_hash_object|
       Memo.new(memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at'])
     end
   end
 
   def self.find_by_id(id)
-    memo_hash_objects = db_exec("SELECT * FROM memos WHERE id = '#{id}';").to_a
+    memo_hash_objects = db_exec_select_by_id(id).to_a
     return if memo_hash_objects.empty?
 
     memo_hash_objects.map do |memo_hash_object|
@@ -47,16 +47,15 @@ class Memo
   end
 
   def create
-    db_exec("INSERT INTO memos(title, content) VALUES ('#{title}', '#{content}');")
+    db_exec_create(title, content)
   end
 
   def delete
-    db_exec("DELETE FROM memos WHERE id = '#{id}';")
+    db_exec_delete(id)
   end
 
   def update
-    db_exec("UPDATE memos SET title='#{title}', content='#{content}'
-                , updated_at=CURRENT_TIMESTAMP where id = '#{id}';")
+    db_exec_update(title, content, id)
   end
 end
 
@@ -149,6 +148,35 @@ def show_error_message(message)
   flash[:error] = message
 end
 
-def db_exec(sql)
-  PG.connect(host: DB[:host], port: DB[:port], dbname: DB[:db_name], user: DB[:user]).exec(sql)
+def db_exec_select_all
+  conn = db_connect
+  conn.exec('SELECT * FROM memos')
+end
+
+def db_exec_create(title, content)
+  conn = db_connect
+  conn.prepare('create', 'INSERT INTO memos(title, content) VALUES ($1, $2)')
+  conn.exec_prepared('create', [title, content])
+end
+
+def db_exec_select_by_id(id)
+  conn = db_connect
+  conn.prepare('select_by_id', 'SELECT * FROM memos WHERE id = ($1)')
+  conn.exec_prepared('select_by_id', [id])
+end
+
+def db_exec_update(title, content, id)
+  conn = db_connect
+  conn.prepare('update', 'UPDATE memos SET title=($1), content=($2), updated_at=CURRENT_TIMESTAMP where id = ($3)')
+  conn.exec_prepared('update', [title, content, id])
+end
+
+def db_exec_delete(id)
+  conn = db_connect
+  conn.prepare('delete', 'DELETE FROM memos WHERE id = ($1)')
+  conn.exec_prepared('delete', [id])
+end
+
+def db_connect
+  PG.connect(host: DB[:host], port: DB[:port], dbname: DB[:db_name], user: DB[:user])
 end
