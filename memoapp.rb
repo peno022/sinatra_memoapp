@@ -8,7 +8,6 @@ require 'pg'
 
 enable :sessions
 
-ERROR_MESSAGE_MEMO_NOT_EXIST = '対象のメモデータがありません。'
 ERROR_MESSAGE_EMPTY_MEMO = 'タイトル、内容にはテキストを入力してください。'
 
 DB = {
@@ -76,19 +75,21 @@ get '/memos/new' do
 end
 
 get '/memos/edit/:id' do
-  target_memo = Memo.find_by_id(params['id'])
-  unless target_memo
-    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
-    redirect '/memos'
-    return
+  @memo = Memo.find_by_id(params['id'])
+  if @memo
+    erb :edit
+  else
+    status 404
   end
-  @memo = target_memo
-  erb :edit
 end
 
 get '/memos/:id' do
   @memo = Memo.find_by_id(params['id'])
-  erb :detail
+  if @memo
+    erb :detail
+  else
+    status 404
+  end
 end
 
 post '/memos' do
@@ -107,8 +108,7 @@ end
 patch '/memos/:id' do
   target_memo = Memo.find_by_id(params['id'])
   unless target_memo
-    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
-    redirect '/memos'
+    status 404
     return
   end
 
@@ -128,14 +128,21 @@ end
 delete '/memos/:id' do
   target_memo = Memo.find_by_id(params['id'])
   unless target_memo
-    show_error_message(ERROR_MESSAGE_MEMO_NOT_EXIST)
-    redirect '/memos'
+    status 404
     return
   end
 
   target_memo.delete
   redirect '/memos'
   erb :index
+end
+
+not_found do
+  send_file 'public/404.html'
+end
+
+error do
+  send_file 'public/500.html'
 end
 
 def show_error_message(message)
