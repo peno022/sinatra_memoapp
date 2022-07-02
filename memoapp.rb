@@ -12,11 +12,10 @@ ERROR_MESSAGE_EMPTY_MEMO = 'タイトル、内容にはテキストを入力し�
 
 DB = {
   db_name: 'sinatra_memoapp',
-  host: 'localhost',
-  user: 'postgres',
-  port: 5432
+  host: ENV['DB_HOST'],
+  user: ENV['DB_USER'],
+  port: ENV['DB_PORT']
 }.freeze
-
 class Memo
   attr_accessor :title, :content
   attr_reader :id, :created_at, :updated_at
