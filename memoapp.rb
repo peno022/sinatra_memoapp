@@ -31,24 +31,20 @@ class Memo
   end
 
   def self.all
-    memo_hash_objects = []
-    db_exec('SELECT * FROM memos').each do |row|
-      memo_hash_objects.push(row)
-    end
-    memo_hash_objects.map do |memo_hash_object|
+    db_exec('SELECT * FROM memos').to_a.map do |memo_hash_object|
       Memo.new(memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at'])
     end
   end
 
   def self.find_by_id(id)
-    memo_hash_objects = []
-    db_exec("SELECT * FROM memos WHERE id = '#{id}';").each do |row|
-      memo_hash_objects.push(row)
-    end
-    return unless memo_hash_objects.length == 1
+    memo_hash_objects = db_exec("SELECT * FROM memos WHERE id = '#{id}';").to_a
+    return if memo_hash_objects.empty?
 
-    Memo.new(memo_hash_objects[0]['id'], memo_hash_objects[0]['title'], memo_hash_objects[0]['content'], memo_hash_objects[0]['created_at'],
-             memo_hash_objects[0]['updated_at'])
+    memo_hash_objects.map do |memo_hash_object|
+      Memo.new(
+        memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at']
+      )
+    end.first
   end
 
   def create
