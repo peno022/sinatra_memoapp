@@ -29,18 +29,16 @@ class Memo
   end
 
   def self.all
-    db_exec_select_all.map do |memo_hash_object|
-      Memo.new(memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at'])
+    db_exec_select_all.map do |memo|
+      Memo.new(*memo.slice('id', 'title', 'content', 'created_at', 'updated_at').values)
     end
   end
 
   def self.find_by_id(id)
-    memo_hash_object = db_exec_select_by_id(id).first
-    return if memo_hash_object.empty?
+    memo = db_exec_select_by_id(id).first
+    return if memo.empty?
 
-    Memo.new(
-      memo_hash_object['id'], memo_hash_object['title'], memo_hash_object['content'], memo_hash_object['created_at'], memo_hash_object['updated_at']
-    )
+    Memo.new(*memo.slice('id', 'title', 'content', 'created_at', 'updated_at').values)
   end
 
   def create
