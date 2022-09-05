@@ -2,6 +2,7 @@
 
 source 'https://rubygems.org'
 
+gem 'pg', '~> 1.0'
 gem 'sinatra', '~> 2.2'
 gem 'sinatra-contrib'
 gem 'sinatra-flash'
